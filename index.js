@@ -1,0 +1,29 @@
+const express = require("express");
+const server = express();
+const mongoose = require("mongoose");
+var cors = require("cors");
+const productsRouter = require("./routes/Products");
+const brandsRouter = require("./routes/Brands");
+const categoriesRouter = require("./routes/Categories");
+//db connections
+main().catch((err) => console.log(err));
+
+async function main() {
+  await mongoose.connect("mongodb://127.0.0.1:27017/ecommerce");
+  console.log("mongoose cannection");
+}
+
+//middleware
+server.use(
+  cors({
+    exposedHeaders: ["X-Total-Count"],
+  })
+);
+server.use(express.json()); // to parse req.body
+server.use("/products", productsRouter.router);
+server.use("/brands", brandsRouter.router);
+server.use("/categories", categoriesRouter.router);
+
+server.listen(3000, () => {
+  console.log("server started");
+});
