@@ -16,9 +16,13 @@ exports.fetchAllProducts = async (req, res) => {
   // filter = {"category": ["smartphone", "laptops"], "brand": ["apple", "oppo"]}
   // sort ={_sort:"price", _order="desc"}
   // pagination = { _page:1, _limi=10}  // _page=1&_limit=10
+  let condition = {};
+  if (!req.query.admin) {
+    condition.deleted = { $ne: true };
+  }
 
-  let query = Product.find({});
-  let totalProductsQuery = Product.find({});
+  let query = Product.find(condition);
+  let totalProductsQuery = Product.find(condition);
 
   if (req.query.category) {
     query = query.find({ category: req.query.category });
