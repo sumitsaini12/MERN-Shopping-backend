@@ -8,7 +8,7 @@ exports.fetchUserById = async (req, res) => {
   try {
     const user = await User.findById(id);
  
-    res.status(200).json({id:user.id, addresses:user.addresses, email:user.email, role:user.role});
+    res.status(200).json({id:user.id, addresses:user.addresses, email:user.email, role:user.role, name:user.name});
   } catch (err) {
     res.status(400).json(err);
   }

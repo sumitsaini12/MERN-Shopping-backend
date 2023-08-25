@@ -22,17 +22,15 @@ const { User } = require("./model/User");
 const { isAuth, sanitizeUser, cookieExtractor } = require("./services/common");
 
 // jwt token
-const SECRET_KEY = "SECRET_KEY";
-
-var opts = {};
+let opts = {};
 opts.jwtFromRequest = cookieExtractor;
-opts.secretOrKey = SECRET_KEY; //TODO: should not be in code
+opts.secretOrKey = process.env.JWT_SECRET_KEY; //TODO: should not be in code
 
 //db connections
 main().catch((err) => console.log(err));
 
 async function main() {
-  await mongoose.connect("mongodb://127.0.0.1:27017/ecommerce");
+  await mongoose.connect(process.env.MONGODB_URL);
 }
 
 //middleware
@@ -41,7 +39,7 @@ server.use(cookieParser());
 
 server.use(
   session({
-    secret: "keyboard cat",
+    secret: process.env.SESSION_SECRET_KEY,
     resave: false, // don't save session if unmodified
     saveUninitialized: false, // don't create session until something stored
   })
@@ -55,12 +53,12 @@ server.use(
 );
 server.use(express.json()); // to parse req.body
 server.use("/products", isAuth(), productsRouter.router); //we can also use JWT
-server.use("/brands",  isAuth(), brandsRouter.router);
-server.use("/categories",  isAuth(), categoriesRouter.router);
-server.use("/users",  isAuth(), userRouter.router);
+server.use("/brands", isAuth(), brandsRouter.router);
+server.use("/categories", isAuth(), categoriesRouter.router);
+server.use("/users", isAuth(), userRouter.router);
 server.use("/auth", authRouter.router);
 server.use("/cart", isAuth(), cartRouter.router);
-server.use("/orders",  isAuth(), orderRouter.router);
+server.use("/orders", isAuth(), orderRouter.router);
 
 //passport strategies
 
@@ -90,7 +88,7 @@ passport.use(
           if (!crypto.timingSafeEqual(user.password, hashedPassword)) {
             return done(null, false, { message: "invalid credentials" });
           } else {
-            const token = jwt.sign(sanitizeUser(user), SECRET_KEY);
+            const token = jwt.sign(sanitizeUser(user), process.env.JWT_SECRET_KEY);
             done(null, { id: user.id, role: user.role, token }); // this line send to serialize user
           }
         }
@@ -133,6 +131,30 @@ passport.deserializeUser(function (user, cb) {
   });
 });
 
-server.listen(3000, () => {
+//payment
+// This is your test secret API key.
+const stripe = require("stripe")(process.env.STRIPE_SERVER_KEY);
+
+server.post("/create-payment-intent", async (req, res) => {
+  const { totalAmount, orderId } = req.body;
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: totalAmount * 100, // for decimal compensation
+    currency: "inr",
+    automatic_payment_methods: {
+      enabled: true,
+    },
+    metadata: {
+      orderId,
+    },
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+});
+
+server.listen(process.env.PORT, () => {
   console.log("server started");
 });
