@@ -20,6 +20,7 @@ const ExtractJwt = require("passport-jwt").ExtractJwt;
 const cookieParser = require("cookie-parser");
 const { User } = require("./model/User");
 const { isAuth, sanitizeUser, cookieExtractor } = require("./services/common");
+const path = require("path");
 
 // jwt token
 let opts = {};
@@ -34,7 +35,7 @@ async function main() {
 }
 
 //middleware
-server.use(express.static(process.env.PUBLIC_DIR));
+server.use(express.static(path.resolve(__dirname, process.env.PUBLIC_DIR)));
 server.use(cookieParser());
 
 server.use(
@@ -88,7 +89,10 @@ passport.use(
           if (!crypto.timingSafeEqual(user.password, hashedPassword)) {
             return done(null, false, { message: "invalid credentials" });
           } else {
-            const token = jwt.sign(sanitizeUser(user), process.env.JWT_SECRET_KEY);
+            const token = jwt.sign(
+              sanitizeUser(user),
+              process.env.JWT_SECRET_KEY
+            );
             done(null, { id: user.id, role: user.role, token }); // this line send to serialize user
           }
         }
@@ -118,14 +122,12 @@ passport.use(
 
 // this creates session variable req.user on being called from callbacks
 passport.serializeUser(function (user, cb) {
-  console.log("serializeUser", user);
   process.nextTick(function () {
     return cb(null, sanitizeUser(user));
   });
 });
 // this changes session variable req.user when called from authorized request
 passport.deserializeUser(function (user, cb) {
-  console.log("de-serializeUser", user);
   process.nextTick(function () {
     return cb(null, user);
   });
