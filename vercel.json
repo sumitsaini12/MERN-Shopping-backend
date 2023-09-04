@@ -6,9 +6,33 @@
       },
       {
         "src": "dist/**",
-        "use": "@vercel/assets"
+        "use": "@vercel/static"
       }
     ],
+    "routes" : [
+      {
+        "scr" : "/auth",
+        "dest" : "index.js"
+      },
+    {
+      "scr" : "/products",
+      "dest" : "index.js"
+    },
+    {
+      "scr" : "/products/(.*)",
+      "dest" : "index.js"
+    },
+    {
+      "scr" : "/",
+      "dest" : "dist/index.html"
+    },
+    {
+      "scr" : "/(.+)",
+      "dest" : "dist/$1"
+    }
+    ]
   
-    "rewrites": [{ "source": "/(.*)", "destination": "index.js" }]
   }
+
+  
+  
